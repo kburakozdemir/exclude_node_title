@@ -1,0 +1,15 @@
+<?php
+// $Id$
+/**
+ * @file
+ * @author Gabriel Ungureanu
+ * gabriel.ungreanu@ag-prime.com
+ */
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function exclude_node_title_uninstall() {
+  variable_del('exclude_node_title_nid_list');
+  variable_del('exclude_node_title_remove_title');
+}
