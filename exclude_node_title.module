@@ -75,7 +75,7 @@ function exclude_node_title_preprocess_page(&$vars) {
 /**
  * Implements hook_node_view()
  */ 
-function exclude_node_title_node_view($node, $view_mode, $langcode) {
+function exclude_node_title_node_view($node, $view_mode) {
   if (variable_get('exclude_node_title_remove_title', 0) == 1 && user_access('use exclude node title')) {
     if (in_array($node->nid, variable_get('exclude_node_title_nid_list', array()))) {
       $node->title = '';
