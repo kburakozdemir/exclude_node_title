@@ -11,13 +11,6 @@
  * Admin configuration form
  */
 function exclude_node_title_admin_settings() {
-  $form['exclude_node_title_nid_list'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Exclude node title from display'),
-    '#description' => t('Select nodes to exclude title from display. One $nid per line.'),
-    '#default_value' => implode("\n", variable_get('exclude_node_title_nid_list', array())),
-  );
-
   $form['exclude_node_title_remove_title'] = array(
     '#type' => 'checkbox',
     '#title' => t('Remove node title from teasers too'),
@@ -34,19 +27,21 @@ function exclude_node_title_admin_settings() {
 
   $form['exclude_node_title_content_type'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Exclude title by content-type'),
-    '#description' => t('Exclude node title of nodes of the following content types.'),
+    '#title' => t('Exclude title by content-types'),
+    '#description' => t('Define title excluding settings for each content type.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
   
-  $node_types = _node_types_build()->names;  
-  $form['exclude_node_title_content_type']['exclude_node_title_content_type_values'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Content-types'),
-    '#default_value' => variable_get('exclude_node_title_content_type_values', array()),
-    '#options' => $node_types,
-  );
+  $node_types = _node_types_build()->names;
+  foreach ($node_types as $node_type => $node_type_label) {
+    $form['exclude_node_title_content_type']['exclude_node_title_content_type_value_' . $node_type] = array(
+      '#type' => 'select',
+      '#title' => $node_type_label,
+      '#default_value' => variable_get('exclude_node_title_content_type_value_' . $node_type, 'none'),
+      '#options' => array('none' => t('None'), 'all' => t('All nodes'), 'user' => t('User defined nodes')),
+    );
+  }
 
   $form['#submit'][] = 'exclude_node_title_admin_submit';
   return system_settings_form($form);
