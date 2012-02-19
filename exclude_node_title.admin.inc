@@ -1,4 +1,5 @@
 <?php
+// $Id$
 /**
  * @file
  * Exclude Node Title Administrative Interface
@@ -11,13 +12,6 @@
  * Admin configuration form
  */
 function exclude_node_title_admin_settings() {
-  $form['exclude_node_title_remove_title'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Remove node title from teasers too'),
-    '#description' => t('Select if you wish to remove title from node teasers.'),
-    '#default_value' => variable_get('exclude_node_title_remove_title', 0),
-  );
-
   $form['exclude_node_title_search'] = array(
     '#type' => 'checkbox',
     '#title' => t('Remove node title from search pages'),
@@ -41,20 +35,21 @@ function exclude_node_title_admin_settings() {
       '#default_value' => variable_get('exclude_node_title_content_type_value_' . $node_type, 'none'),
       '#options' => array('none' => t('None'), 'all' => t('All nodes'), 'user' => t('User defined nodes')),
     );
+    $modes = array('full' => t('Full view'), 'teaser' => t('Teaser'), 'nodeform' => t('Node form'));
+
+    $form['exclude_node_title_content_type']['exclude_node_title_content_type_modes_' . $node_type] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Exclude from:'),
+      '#default_value' => variable_get('exclude_node_title_content_type_modes_' . $node_type, array()),
+      '#options' => $modes,
+      '#states' => array(
+        // Hide the modes when the content type value is <none>.
+        'invisible' => array(
+         'select[name="exclude_node_title_content_type_value_' . $node_type . '"]' => array('value' => 'none'),
+        ),
+      ),
+    );
   }
 
-  $form['#submit'][] = 'exclude_node_title_admin_submit';
   return system_settings_form($form);
-}
-/**
- * Submit function for hook_admin_settings form
- * It processes list of nodes in exception list and saves them as array instead of plain text.
- * Comes before saving actual values in the databse.
- */
-function exclude_node_title_admin_submit($form, &$form_state) {
-  // process node id exceptions list
-  $exception_ids = $form_state['values']['exclude_node_title_nid_list'];
-  $exception_ids = explode("\n", $exception_ids);
-  $exception_ids = array_map('trim', $exception_ids);
-  $form_state['values']['exclude_node_title_nid_list'] = $exception_ids;
 }

@@ -1,4 +1,5 @@
 <?php
+// $Id$
 /**
  * @file
  * Exclude Node Title
@@ -33,8 +34,8 @@ function exclude_node_title_permission() {
 function exclude_node_title_menu() {
   $items = array();
   $items['admin/config/content/exclude_node_title'] = array(
-    'title' => t('Exclude Node Title'),
-    'description' => t('Exclude Node Title from display'),
+    'title' => 'Exclude Node Title',
+    'description' => 'Exclude Node Title from display',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('exclude_node_title_admin_settings'),
     'access arguments' => array('administer exclude node title'),
@@ -48,8 +49,21 @@ function exclude_node_title_menu() {
  * Implements hook_preprocess_page().
  */
 function exclude_node_title_preprocess_page(&$vars) {
-  if (arg(0) == 'node' && is_numeric(arg(1)) && user_access('use exclude node title')) {
-    if (_exclude_node_title(arg(1))) {
+  if (!user_access('use exclude node title')) {
+    return;
+  }
+  if (arg(0) == 'node' && is_numeric(arg(1))) {
+    switch (arg(2)) {
+      case 'edit':
+        $view_mode = 'nodeform';
+        break;
+      case 'delete':
+        return; // delete pages show you all information in title, we should not remove it
+      default:
+        $view_mode = 'full';
+        break;
+    }
+    if (_exclude_node_title(arg(1), $view_mode)) {
       $vars['title'] = '';
     }
   }
@@ -62,8 +76,8 @@ function exclude_node_title_preprocess_page(&$vars) {
  * Implements hook_node_view()
  */ 
 function exclude_node_title_node_view($node, $view_mode) {
-  if (variable_get('exclude_node_title_remove_title', 0) == 1 && user_access('use exclude node title')) {
-    if (_exclude_node_title($node)) {
+  if (user_access('use exclude node title')) {
+    if (_exclude_node_title($node, $view_mode)) {
       $node->title = '';
     }
   }
@@ -74,7 +88,13 @@ function exclude_node_title_node_view($node, $view_mode) {
  */
 function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id) {
-    
+    // exclude for title
+    if (user_access('use exclude node title')) {
+      if (_exclude_node_title($form['#node'], 'nodeform')) {
+        drupal_set_title('');
+      }
+    }
+    // --------------
     // make sure user have permissions correct
     if (!user_access('exclude any node title')) {
       global $user;
@@ -128,6 +148,7 @@ function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $i
   // when deleting a content type, we make sure and clean our variable :)
   if ($entity_type == 'node') {
     variable_del('exclude_node_title_content_type_value_' . $bundle);
+    variable_del('exclude_node_title_content_type_modes_' . $bundle);
   }
 }
 
@@ -138,7 +159,7 @@ function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $i
  * @return
  *   Returns boolean TRUE if should be hidden, FALSE when not
  */
-function _exclude_node_title($param) {
+function _exclude_node_title($param, $view_mode = 'full') {
   
   // we accept only integer and object
   if (!is_object($param) && !is_numeric($param)) {
@@ -154,25 +175,26 @@ function _exclude_node_title($param) {
     unset($param); // memory cleanup
   }
   $node_type = $node->type;
-  $nid = $node->nid;
+  $nid = isset($node->nid)?$node->nid:FALSE;
   unset($node); // memory cleanup
   
   // get exclude settings
   static $exclude_settings;
   if (!isset($exclude_settings)) {
     foreach (_node_types_build()->names as $key => $val) {
-      $exclude_settings[$key] = variable_get('exclude_node_title_content_type_value_' . $key, 'none');
+      $exclude_settings[$key] = array(
+        'type'  => variable_get('exclude_node_title_content_type_value_' . $key, 'none'),
+        'modes' => variable_get('exclude_node_title_content_type_modes_' . $key, array()),
+      );
     }
   }
-  
-  switch ($exclude_settings[$node_type]) {
+  switch ($exclude_settings[$node_type]['type']) {
     case 'all':
-      return TRUE;
+      return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
     case 'user':
-      
       // we look for the nid list
       if (in_array($nid, variable_get('exclude_node_title_nid_list', array()))) {
-        return TRUE;
+        return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
       }
       return FALSE;
       
@@ -181,6 +203,4 @@ function _exclude_node_title($param) {
       return FALSE;
       break;
   }
-  
 }
-
