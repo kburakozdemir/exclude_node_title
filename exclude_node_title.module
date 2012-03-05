@@ -169,8 +169,11 @@ function _exclude_node_title($param, $view_mode = 'full') {
   // if numeric, load the node with nid
   if (is_numeric($param)) {
     $node = node_load(intval($param));
+    if (!is_object($node)) {
+      return FALSE;
+    }
   }
-  else {
+  elseif (is_object($param)) {
     $node = $param;
     unset($param); // memory cleanup
   }
