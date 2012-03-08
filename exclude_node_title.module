@@ -102,6 +102,15 @@ function exclude_node_title_node_insert($node) {
 }
 
 /**
+ * Implements hook_node_delete()
+ */
+function exclude_node_title_node_delete($node) {
+  if (isset($node->exclude_node_title) && $node->exclude_node_title == 1  && exclude_node_title_check_perm($node)) {
+    exclude_node_title_set_flag($node, 0);
+  }
+}
+
+/**
  * Check permission to change node title exclusion.
  */
 function exclude_node_title_check_perm($node) {
