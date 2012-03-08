@@ -15,8 +15,9 @@ function exclude_node_title_admin_settings() {
   $form['exclude_node_title_search'] = array(
     '#type' => 'checkbox',
     '#title' => t('Remove node title from search pages'),
-    '#description' => t('Select if you wish to remove title from search pages.'),
+    '#description' => t('Select if you wish to remove title from search pages. You need to have Search module !url.', array('!url' => l(t('enabled'), 'admin/modules/list'))),
     '#default_value' => variable_get('exclude_node_title_search', 0),
+    '#disabled' => !module_exists('search')
   );
 
   $form['exclude_node_title_content_type'] = array(
