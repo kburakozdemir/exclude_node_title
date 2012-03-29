@@ -27,7 +27,6 @@ function exclude_node_title_admin_settings() {
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
-  
   $node_types = _node_types_build()->names;
   foreach ($node_types as $node_type => $node_type_label) {
     $form['exclude_node_title_content_type']['exclude_node_title_content_type_value_' . $node_type] = array(
@@ -36,7 +35,14 @@ function exclude_node_title_admin_settings() {
       '#default_value' => variable_get('exclude_node_title_content_type_value_' . $node_type, 'none'),
       '#options' => array('none' => t('None'), 'all' => t('All nodes'), 'user' => t('User defined nodes')),
     );
-    $modes = array('full' => t('Full view'), 'teaser' => t('Teaser'), 'nodeform' => t('Node form'));
+
+    $entity_info = entity_get_info('node');
+    $view_modes = $entity_info['view modes'];
+    $modes = array();
+    foreach ($view_modes as $view_mode_name => $view_mode_info) {
+      $modes[$view_mode_name] = $view_mode_info['label'];
+    }
+    $modes += array('nodeform' => t('Node form'));
 
     $form['exclude_node_title_content_type']['exclude_node_title_content_type_modes_' . $node_type] = array(
       '#type' => 'checkboxes',
