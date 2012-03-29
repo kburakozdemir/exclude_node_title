@@ -150,6 +150,17 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
         '#default_value' => (!empty($form['nid']['#value']) ? in_array($form['nid']['#value'], variable_get('exclude_node_title_nid_list', array())) : FALSE ),
         '#weight' => $weight,
       );
+      if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($form['#node']->type) && !empty($form['nid']['#value'])) {
+        // get tnid
+        $tnid = db_select('node', 'n')
+          ->fields('n', array('tnid'))
+          ->condition('nid', $form['nid']['#value'])
+          ->execute()
+          ->fetchAssoc();
+        if ($tnid['tnid'] != $form['nid']['#value']) {
+          $form['exclude_node_title']['#description'] = t('Check !here if you don`t have title disabled in the source language of this node.', array('!here' => l(t('here'), 'node/' . $tnid['tnid'] . '/edit')));
+        }
+      }
     }
   }
 }
@@ -227,8 +238,24 @@ function _exclude_node_title($param, $view_mode = 'full') {
       return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
     case 'user':
       // we look for the nid list
-      if (in_array($nid, variable_get('exclude_node_title_nid_list', array()))) {
-        return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
+      $nid_exclude_list = variable_get('exclude_node_title_nid_list', array());
+      $nid_list = array($nid => $nid);
+      if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($node_type)) {
+        // get tnid
+        $tnid = db_select('node', 'n')
+          ->fields('n', array('tnid'))
+          ->condition('nid', $nid)
+          ->execute()
+          ->fetchAssoc();
+        $tlist = translation_node_get_translations($tnid['tnid']);
+        foreach ($tlist as $tlang => $tnode) {
+          $nid_list[$tnode->nid] = $tnode->nid;
+        }
+      }
+      foreach ($nid_list as $item_nid) {
+        if (in_array($item_nid, $nid_exclude_list)) {
+          return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
+        }
       }
       return FALSE;
       

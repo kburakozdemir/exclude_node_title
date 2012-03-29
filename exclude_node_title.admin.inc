@@ -20,6 +20,14 @@ function exclude_node_title_admin_settings() {
     '#disabled' => !module_exists('search')
   );
 
+  $form['exclude_node_title_translation_sync'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Syncronize content translations'),
+    '#description' => t('If you hide title from one node, it will automatically hide title for all the translated versions of that node. You need to have Content translation module !url.', array('!url' => l(t('enabled'), 'admin/modules/list'))),
+    '#default_value' => variable_get('exclude_node_title_translation_sync', TRUE),
+    '#disabled' => !module_exists('translation')
+  );
+
   $form['exclude_node_title_content_type'] = array(
     '#type' => 'fieldset',
     '#title' => t('Exclude title by content-types'),
