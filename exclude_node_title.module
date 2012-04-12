@@ -248,8 +248,10 @@ function _exclude_node_title($param, $view_mode = 'full') {
           ->execute()
           ->fetchAssoc();
         $tlist = translation_node_get_translations($tnid['tnid']);
-        foreach ($tlist as $tlang => $tnode) {
-          $nid_list[$tnode->nid] = $tnode->nid;
+        if (is_array($tlist)) {
+          foreach ($tlist as $tlang => $tnode) {
+            $nid_list[$tnode->nid] = $tnode->nid;
+          }
         }
       }
       foreach ($nid_list as $item_nid) {
