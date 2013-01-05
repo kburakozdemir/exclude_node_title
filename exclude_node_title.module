@@ -219,6 +219,8 @@ function _exclude_node_title($param, $view_mode = 'full') {
     $node = $param;
     unset($param); // memory cleanup
   }
+  // Check that the node exists 
+  if (!isset($node) || !isset($node->type)) return FALSE;
   $node_type = $node->type;
   $nid = isset($node->nid)?$node->nid:FALSE;
   unset($node); // memory cleanup
