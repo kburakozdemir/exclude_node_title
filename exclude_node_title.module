@@ -159,7 +159,7 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
           ->execute()
           ->fetchAssoc();
         if ($tnid['tnid'] != $form['nid']['#value']) {
-          $form['exclude_node_title']['#description'] = t('Check !here if you don`t have title disabled in the source language of this node.', array('!here' => l(t('here'), 'node/' . $tnid['tnid'] . '/edit')));
+          $form['exclude_node_title']['#description'] = t("Check !here if you don't have title disabled in the source language of this node.", array('!here' => l(t('here'), 'node/' . $tnid['tnid'] . '/edit')));
         }
       }
     }
