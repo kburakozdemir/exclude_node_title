@@ -149,7 +149,6 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
         '#required' => FALSE,
         '#default_value' => (!empty($form['nid']['#value']) ? in_array($form['nid']['#value'], variable_get('exclude_node_title_nid_list', array())) : FALSE ),
         '#weight' => $weight,
-        '#process' => array(),
       );
       if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($form['#node']->type) && !empty($form['nid']['#value'])) {
         // get tnid
