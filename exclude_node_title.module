@@ -39,7 +39,7 @@ function exclude_node_title_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('exclude_node_title_admin_settings'),
     'access arguments' => array('administer exclude node title'),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_NORMAL_ITEM,
     'file' => 'exclude_node_title.admin.inc',
   );
   return $items;
