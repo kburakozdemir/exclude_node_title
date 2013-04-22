@@ -70,11 +70,25 @@ function exclude_node_title_preprocess_page(&$vars) {
         $view_mode = 'full';
         break;
     }
-    if (_exclude_node_title(arg(1), $view_mode)) {
-      $vars['title'] = '';
-    }
+
+    _exclude_node_title_preprocess($vars, arg(1), $view_mode);
   }
-  elseif (arg(0) == 'search' && variable_get('exclude_node_title_search', 0)) {
+}
+
+/**
+ * Remove the title from the variables array.  
+ */
+function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
+  if (_exclude_node_title($node, $view_mode)) {
+      $vars['title'] = '';
+  }
+}
+
+/**
+ * Implements hook_preprocess_search_result().
+ */
+function exclude_node_title_preprocess_search_result(&$vars) {
+  if (user_access('use exclude node title') && variable_get('exclude_node_title_search', 0)) {
     $vars['title'] = '';
   }
 }
