@@ -1,11 +1,10 @@
 <?php
-// $Id$
+
 /**
  * @file
- * Exclude Node Title
+ * Primarily Drupal hooks and global API functions to exclude node titles.
  *
- * @author Gabriel Ungureanu
- * gabriel.ungreanu@ag-prime.com
+ * This is the main module file for Exclude Node Title. 
  */
 
 /**
