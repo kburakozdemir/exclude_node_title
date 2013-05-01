@@ -311,3 +311,30 @@ function exclude_node_title_field_extra_fields() {
   
   return $extra;
 }
+
+/**
+ * Implements hook_ds_fields_info_alter().
+ */
+function exclude_node_title_ds_fields_info_alter(&$fields, $entity_type) {
+  if ($entity_type == 'node') {
+    $fields['title']['function'] = '_exclude_node_title_ds_render_field';
+    $fields['title']['properties']['settings']['exclude node title settings'] = array(
+      'type' => 'select',
+      'options' => array('No', 'Yes'),
+      'description' => t('Use the settings for the Exclude Node Title module for the title. Set to "off" to always show title.'),
+    );
+    $fields['title']['properties']['default']['exclude node title settings'] = 1;
+  }
+}
+
+/*
+ * Render the field obeying exclude node title settings
+ */
+function _exclude_node_title_ds_render_field($field) {
+  $settings = isset($field['formatter_settings']) ? $field['formatter_settings'] : array();
+  $settings += $field['properties']['default'];
+  if ($settings['exclude node title settings'] && _exclude_node_title($field['entity']->nid, $field['view_mode'])) {
+    $field['entity']->title = '';
+  }
+  return ds_render_field($field);
+}
