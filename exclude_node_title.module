@@ -72,7 +72,7 @@ function exclude_node_title_preprocess_page(&$vars) {
     }
 
     _exclude_node_title_preprocess($vars, arg(1), $view_mode);
-  } else if ($vars['page']['content']['system_main']['#node_edit_form'] == TRUE) {
+  } else if (isset($vars['page']['content']['system_main']['#node_edit_form']) && $vars['page']['content']['system_main']['#node_edit_form'] == TRUE) {
     _exclude_node_title_preprocess($vars, $vars['page']['content']['system_main']['#node'], 'nodeform');
   }
 }
