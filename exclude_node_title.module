@@ -58,6 +58,7 @@ function exclude_node_title_preprocess_page(&$vars) {
   if (!user_access('use exclude node title')) {
     return;
   }
+
   if (arg(0) == 'node' && is_numeric(arg(1))) {
     switch (arg(2)) {
       case 'edit':
@@ -71,6 +72,8 @@ function exclude_node_title_preprocess_page(&$vars) {
     }
 
     _exclude_node_title_preprocess($vars, arg(1), $view_mode);
+  } else if ($vars['page']['content']['system_main']['#node_edit_form'] == TRUE) {
+    _exclude_node_title_preprocess($vars, $vars['page']['content']['system_main']['#node'], 'nodeform');
   }
 }
 
@@ -88,7 +91,11 @@ function exclude_node_title_preprocess_node(&$vars) {
  */
 function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
   if (_exclude_node_title($node, $view_mode)) {
-      $vars['title'] = '';
+    $vars['title'] = '';
+    if ($view_mode == 'nodeform') {
+      // Also remove the field from the form
+      $vars['page']['content']['system_main']['title']['#access'] = false;
+    }
   }
 }
 
@@ -220,28 +227,7 @@ function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $i
  *   Returns boolean TRUE if should be hidden, FALSE when not
  */
 function _exclude_node_title($param, $view_mode = 'full') {
-  
-  // we accept only integer and object
-  if (!is_object($param) && !is_numeric($param)) {
-    return FALSE;
-  }
-  
-  // if numeric, load the node with nid
-  if (is_numeric($param)) {
-    $node = node_load(intval($param));
-    if (!is_object($node)) {
-      return FALSE;
-    }
-  }
-  elseif (is_object($param)) {
-    $node = $param;
-    unset($param); // memory cleanup
-  }
-  // Check that the node exists 
-  if (!isset($node) || !isset($node->type)) return FALSE;
-  $node_type = $node->type;
-  $nid = isset($node->nid)?$node->nid:FALSE;
-  unset($node); // memory cleanup
+  list($nid, $node_type) = _exclude_node_title_get_node($param);
   
   // get exclude settings
   static $exclude_settings;
@@ -253,13 +239,19 @@ function _exclude_node_title($param, $view_mode = 'full') {
       );
     }
   }
+
   switch ($exclude_settings[$node_type]['type']) {
     case 'all':
       return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
+
     case 'user':
+      if (!$nid)
+        return FALSE;
+
       // we look for the nid list
       $nid_exclude_list = variable_get('exclude_node_title_nid_list', array());
       $nid_list = array($nid => $nid);
+
       if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($node_type)) {
         // get tnid
         $tnid = db_select('node', 'n')
@@ -268,24 +260,64 @@ function _exclude_node_title($param, $view_mode = 'full') {
           ->execute()
           ->fetchAssoc();
         $tlist = translation_node_get_translations($tnid['tnid']);
+
         if (is_array($tlist)) {
           foreach ($tlist as $tlang => $tnode) {
             $nid_list[$tnode->nid] = $tnode->nid;
           }
         }
       }
+
       foreach ($nid_list as $item_nid) {
         if (in_array($item_nid, $nid_exclude_list)) {
           return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
         }
       }
+
       return FALSE;
       
     case 'none':
+
     default:
       return FALSE;
       break;
   }
+}
+
+/**
+ * Helper function to _exclude_node_title() that extracts node information from $param.
+ * @param $param
+ *   Can be a node object or integer value (nid)
+ * @return
+ *   Returns an array with node id and node type, or FALSE if there were errors.
+ */
+function _exclude_node_title_get_node($param) {
+    // we accept only integer and object
+    if (!is_object($param) && !is_numeric($param)) {
+        return FALSE;
+    }
+
+    // if numeric, load the node with nid
+    if (is_numeric($param)) {
+        $node = node_load(intval($param));
+        if (!is_object($node)) {
+            return FALSE;
+        }
+    }
+    else if (is_object($param)) {
+        $node = $param;
+        unset($param); // memory cleanup
+    }
+
+    // Check that the node exists 
+    if (!isset($node) || !isset($node->type))
+        return FALSE;
+
+    $node_type = $node->type;
+    $nid = isset($node->nid)? $node->nid : FALSE;
+    unset($node); // memory cleanup
+
+    return array($nid, $node_type);
 }
 
 /**
