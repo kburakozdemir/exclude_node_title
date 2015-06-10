@@ -227,8 +227,10 @@ function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $i
  *   Returns boolean TRUE if should be hidden, FALSE when not
  */
 function _exclude_node_title($param, $view_mode = 'full') {
-  list($nid, $node_type) = _exclude_node_title_get_node($param);
-  
+  if (!($node_info = _exclude_node_title_get_node($param))) {
+    return false;
+  }
+
   // get exclude settings
   static $exclude_settings;
   if (!isset($exclude_settings)) {
@@ -240,23 +242,23 @@ function _exclude_node_title($param, $view_mode = 'full') {
     }
   }
 
-  switch ($exclude_settings[$node_type]['type']) {
+  switch ($exclude_settings[$node_info['node_type']]['type']) {
     case 'all':
-      return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
+      return !empty($exclude_settings[$node_info['node_type']]['modes'][$view_mode]);
 
     case 'user':
-      if (!$nid)
+      if (!$node_info['nid'])
         return FALSE;
 
       // we look for the nid list
       $nid_exclude_list = variable_get('exclude_node_title_nid_list', array());
       $nid_list = array($nid => $nid);
 
-      if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($node_type)) {
+      if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($node_info['node_type'])) {
         // get tnid
         $tnid = db_select('node', 'n')
           ->fields('n', array('tnid'))
-          ->condition('nid', $nid)
+          ->condition('nid', $node_info['nid'])
           ->execute()
           ->fetchAssoc();
         $tlist = translation_node_get_translations($tnid['tnid']);
@@ -270,7 +272,7 @@ function _exclude_node_title($param, $view_mode = 'full') {
 
       foreach ($nid_list as $item_nid) {
         if (in_array($item_nid, $nid_exclude_list)) {
-          return !empty($exclude_settings[$node_type]['modes'][$view_mode]);
+          return !empty($exclude_settings[$node_info['node_type']]['modes'][$view_mode]);
         }
       }
 
@@ -317,7 +319,7 @@ function _exclude_node_title_get_node($param) {
     $nid = isset($node->nid)? $node->nid : FALSE;
     unset($node); // memory cleanup
 
-    return array($nid, $node_type);
+    return array('nid' => $nid, 'node_type' => $node_type);
 }
 
 /**
