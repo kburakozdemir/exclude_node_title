@@ -44,6 +44,10 @@ function exclude_node_title_menu() {
   return $items;
 }
 
+function exclude_node_title($node, $view_mode) {
+  return (user_access('use exclude node title') && _exclude_node_title($node, $view_mode));
+}
+
 /**
  * Implements hook_preprocess_overlay().
  */
