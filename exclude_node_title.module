@@ -44,6 +44,16 @@ function exclude_node_title_menu() {
   return $items;
 }
 
+/**
+ * Determines if node should be hidden and user
+ * has permission to have the title hidden.
+ * @param $node
+ *   Can be a node object or integer value (nid)
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
+ * @return
+ *   Returns boolean TRUE if should be hidden, FALSE when not
+ */
 function exclude_node_title($node, $view_mode) {
   return (user_access('use exclude node title') && _exclude_node_title($node, $view_mode));
 }
@@ -91,7 +101,7 @@ function exclude_node_title_preprocess_node(&$vars) {
 }
 
 /**
- * Remove the title from the variables array.  
+ * Remove the title from the variables array.
  */
 function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
   if (_exclude_node_title($node, $view_mode)) {
@@ -113,7 +123,7 @@ function exclude_node_title_preprocess_search_result(&$vars) {
 }
 
 /**
- * Implements hook_node_update()
+ * Implements hook_node_update().
  */
 function exclude_node_title_node_update($node) {
   if (isset($node->exclude_node_title) && exclude_node_title_check_perm($node)) {
@@ -122,7 +132,7 @@ function exclude_node_title_node_update($node) {
 }
 
 /**
- * Implements hook_node_insert()
+ * Implements hook_node_insert().
  */
 function exclude_node_title_node_insert($node) {
   if (isset($node->exclude_node_title) && exclude_node_title_check_perm($node)) {
@@ -131,7 +141,7 @@ function exclude_node_title_node_insert($node) {
 }
 
 /**
- * Implements hook_node_delete()
+ * Implements hook_node_delete().
  */
 function exclude_node_title_node_delete($node) {
   if (isset($node->exclude_node_title) && $node->exclude_node_title == 1 ) {
@@ -370,7 +380,7 @@ function exclude_node_title_ds_fields_info_alter(&$fields, $entity_type) {
 }
 
 /*
- * Render the field obeying exclude node title settings
+ * Render the field obeying exclude node title settings.
  */
 function _exclude_node_title_ds_render_field($field) {
   $settings = isset($field['formatter_settings']) ? $field['formatter_settings'] : array();
