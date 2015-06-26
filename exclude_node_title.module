@@ -270,7 +270,7 @@ function _exclude_node_title($param, $view_mode = 'full') {
 
       // we look for the nid list
       $nid_exclude_list = variable_get('exclude_node_title_nid_list', array());
-      $nid_list = array($nid => $nid);
+      $nid_list = array($node_info['nid'] => $node_info['nid']);
 
       if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($node_info['node_type'])) {
         // get tnid
