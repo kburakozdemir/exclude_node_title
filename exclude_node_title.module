@@ -4,12 +4,12 @@
  * @file
  * Primarily Drupal hooks and global API functions to exclude node titles.
  *
- * This is the main module file for Exclude Node Title. 
+ * This is the main module file for Exclude Node Title.
  */
 
 /**
  * Implements hook_permission().
- */ 
+ */
 function exclude_node_title_permission() {
   return array(
     'administer exclude node title' => array(
@@ -22,7 +22,7 @@ function exclude_node_title_permission() {
       'title' => t('Exclude own node title'),
     ),
     'use exclude node title' => array(
-      'title' => t('Use exclude node title')
+      'title' => t('Use exclude node title'),
     ),
   );
 }
@@ -45,14 +45,15 @@ function exclude_node_title_menu() {
 }
 
 /**
- * Determines if node should be hidden and user
- * has permission to have the title hidden.
- * @param $node
- *   Can be a node object or integer value (nid)
- * @param $view_mode
- *   View mode, e.g. 'full', 'teaser'...
- * @return
- *   Returns boolean TRUE if should be hidden, FALSE when not
+ * Determine whether a user has privilege and whether to exclude the node title.
+ *
+ * @param object $node
+ *   The node object.
+ * @param string $view_mode
+ *   The view mode, e.g. 'full' or 'teaser'.
+ *
+ * @return bool Returns TRUE if title should be hidden, otherwise returns FALSE.
+ *   Returns TRUE if title should be hidden, otherwise returns FALSE.
  */
 function exclude_node_title($node, $view_mode) {
   return (user_access('use exclude node title') && _exclude_node_title($node, $view_mode));
@@ -72,21 +73,22 @@ function exclude_node_title_preprocess_page(&$vars) {
   if (!user_access('use exclude node title') || (arg(0) == 'node' && arg(1) == 'add')) {
     return;
   }
-
   if (arg(0) == 'node' && is_numeric(arg(1))) {
     switch (arg(2)) {
       case 'edit':
         $view_mode = 'nodeform';
         break;
+
       case 'delete':
-        return; // delete pages show you all information in title, we should not remove it
+        return;
+
       default:
         $view_mode = 'full';
         break;
     }
-
     _exclude_node_title_preprocess($vars, arg(1), $view_mode);
-  } else if (isset($vars['page']['content']['system_main']['#node_edit_form']) && $vars['page']['content']['system_main']['#node_edit_form'] == TRUE) {
+  }
+  elseif (isset($vars['page']['content']['system_main']['#node_edit_form']) && $vars['page']['content']['system_main']['#node_edit_form'] == TRUE) {
     _exclude_node_title_preprocess($vars, $vars['page']['content']['system_main']['#node'], 'nodeform');
   }
 }
@@ -107,8 +109,8 @@ function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
   if (_exclude_node_title($node, $view_mode)) {
     $vars['title'] = '';
     if ($view_mode == 'nodeform') {
-      // Also remove the field from the form
-      $vars['page']['content']['system_main']['title']['#access'] = false;
+      // Prevent access to the title field on nodeform view mode.
+      $vars['page']['content']['system_main']['title']['#access'] = FALSE;
     }
   }
 }
@@ -144,7 +146,7 @@ function exclude_node_title_node_insert($node) {
  * Implements hook_node_delete().
  */
 function exclude_node_title_node_delete($node) {
-  if (isset($node->exclude_node_title) && $node->exclude_node_title == 1 ) {
+  if (isset($node->exclude_node_title) && $node->exclude_node_title == TRUE) {
     exclude_node_title_set_flag($node, 0);
   }
 }
@@ -154,10 +156,12 @@ function exclude_node_title_node_delete($node) {
  */
 function exclude_node_title_check_perm($node) {
   global $user;
-  if (user_access('exclude any node title'))
+  if (user_access('exclude any node title')) {
     return TRUE;
-  if (!user_access('exclude own node title'))
+  }
+  if (!user_access('exclude own node title')) {
     return FALSE;
+  }
   return !strcmp($node->name, $user->name);
 }
 
@@ -166,31 +170,28 @@ function exclude_node_title_check_perm($node) {
  */
 function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id) {
-    // exclude for title
+    // Exclude the node title for privileged users.
     if (user_access('use exclude node title')) {
       if (_exclude_node_title($form['#node'], 'nodeform')) {
         drupal_set_title('');
       }
     }
-    // --------------
-    // make sure user have permissions correct
+    // Prevent users without permission from accessing the node title settings.
     if (!exclude_node_title_check_perm($form['#node'])) {
       return FALSE;
     }
-    
-    // don't bother to add form element if the content type isn't configured
-    // to be excluded by user...
+    // Add form element only for enabled content types.
     if (variable_get('exclude_node_title_content_type_value_' . $form['#node']->type) == 'user') {
       $weight = $form['title']['#weight'] + 0.1;
       $form['exclude_node_title'] = array(
         '#type' => 'checkbox',
         '#title' => t('Exclude title from display'),
         '#required' => FALSE,
-        '#default_value' => (!empty($form['nid']['#value']) ? in_array($form['nid']['#value'], variable_get('exclude_node_title_nid_list', array())) : FALSE ),
+        '#default_value' => (!empty($form['nid']['#value']) ? in_array($form['nid']['#value'], variable_get('exclude_node_title_nid_list', array())) : FALSE),
         '#weight' => $weight,
       );
       if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($form['#node']->type) && !empty($form['nid']['#value'])) {
-        // get tnid
+        // Get the translation source node ID.
         $tnid = db_select('node', 'n')
           ->fields('n', array('tnid'))
           ->condition('nid', $form['nid']['#value'])
@@ -202,6 +203,7 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
       }
     }
   }
+  return FALSE;
 }
 
 /**
@@ -226,7 +228,7 @@ function exclude_node_title_set_flag($node, $value = 1) {
  * Implements hook_field_attach_delete_bundle().
  */
 function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $instances) {
-  // when deleting a content type, we make sure and clean our variable :)
+  // Remove variables when a content type is deleted.
   if ($entity_type == 'node') {
     variable_del('exclude_node_title_content_type_value_' . $bundle);
     variable_del('exclude_node_title_content_type_modes_' . $bundle);
@@ -234,18 +236,21 @@ function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $i
 }
 
 /**
- * Tells if node should get hidden or not.
- * @param $param
- *   Can be a node object or integer value (nid)
- * @return
- *   Returns boolean TRUE if should be hidden, FALSE when not
+ * Determine whether the node title should be excluded.
+ *
+ * @param object $param
+ *   Contains the node object.
+ * @param string $view_mode
+ *   The view mode, e.g. 'full' or 'teaser'.
+ *
+ * @return bool Returns TRUE if the title should be hidden, otherwise returns FALSE.
+ *   Returns TRUE if the title should be hidden, otherwise returns FALSE.
  */
 function _exclude_node_title($param, $view_mode = 'full') {
   if (!($node_info = _exclude_node_title_get_node($param))) {
     return FALSE;
   }
-
-  // get exclude settings
+  // Get exclude settings.
   static $exclude_settings;
   if (!isset($exclude_settings)) {
     foreach (_node_types_build()->names as $key => $val) {
@@ -255,89 +260,80 @@ function _exclude_node_title($param, $view_mode = 'full') {
       );
     }
   }
-
   if (!isset($exclude_settings[$node_info['node_type']]['type'])) {
     return FALSE;
   }
-
   switch ($exclude_settings[$node_info['node_type']]['type']) {
     case 'all':
       return !empty($exclude_settings[$node_info['node_type']]['modes'][$view_mode]);
 
     case 'user':
-      if (!$node_info['nid'])
+      if (!$node_info['nid']) {
         return FALSE;
-
-      // we look for the nid list
+      }
+      // Prepare a list of the node IDs to be excluded.
       $nid_exclude_list = variable_get('exclude_node_title_nid_list', array());
       $nid_list = array($node_info['nid'] => $node_info['nid']);
-
       if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($node_info['node_type'])) {
-        // get tnid
+        // Get the translation source node ID.
         $tnid = db_select('node', 'n')
           ->fields('n', array('tnid'))
           ->condition('nid', $node_info['nid'])
           ->execute()
           ->fetchAssoc();
         $tlist = translation_node_get_translations($tnid['tnid']);
-
         if (is_array($tlist)) {
           foreach ($tlist as $tlang => $tnode) {
             $nid_list[$tnode->nid] = $tnode->nid;
           }
         }
       }
-
       foreach ($nid_list as $item_nid) {
         if (in_array($item_nid, $nid_exclude_list)) {
           return !empty($exclude_settings[$node_info['node_type']]['modes'][$view_mode]);
         }
       }
-
       return FALSE;
-      
-    case 'none':
 
+    case 'none':
     default:
       return FALSE;
-      break;
   }
 }
 
 /**
- * Helper function to _exclude_node_title() that extracts node information from $param.
- * @param $param
- *   Can be a node object or integer value (nid)
- * @return
+ * Helper function that extracts node information from $param.
+ *
+ * @param int|object $param
+ *   Can be a node object or integer value (nid).
+ *
+ * @return mixed Returns an array with node id and node type, or FALSE if there were errors.
  *   Returns an array with node id and node type, or FALSE if there were errors.
  */
 function _exclude_node_title_get_node($param) {
-    // we accept only integer and object
-    if (!is_object($param) && !is_numeric($param)) {
-        return FALSE;
+  // Do not load nodes unless we have objects and integers.
+  if (!is_object($param) && !is_numeric($param)) {
+    return FALSE;
+  }
+  // Load the node by its ID if we have numeric value.
+  if (is_numeric($param)) {
+    $node = node_load(intval($param));
+    if (!is_object($node)) {
+      return FALSE;
     }
-
-    // if numeric, load the node with nid
-    if (is_numeric($param)) {
-        $node = node_load(intval($param));
-        if (!is_object($node)) {
-            return FALSE;
-        }
-    }
-    else if (is_object($param)) {
-        $node = $param;
-        unset($param); // memory cleanup
-    }
-
-    // Check that the node exists 
-    if (!isset($node) || !isset($node->type))
-        return FALSE;
-
-    $node_type = $node->type;
-    $nid = isset($node->nid)? $node->nid : FALSE;
-    unset($node); // memory cleanup
-
-    return array('nid' => $nid, 'node_type' => $node_type);
+  }
+  elseif (is_object($param)) {
+    $node = $param;
+    unset($param);
+  }
+  // Do not get node IDs for non-existing nodes.
+  if (!isset($node) || !isset($node->type)) {
+    return FALSE;
+  }
+  $node_type = $node->type;
+  $nid = isset($node->nid) ? $node->nid : FALSE;
+  unset($node);
+  return array('nid' => $nid, 'node_type' => $node_type);
 }
 
 /**
@@ -348,8 +344,9 @@ function exclude_node_title_field_extra_fields() {
 
   foreach (node_type_get_types() as $type) {
     $exclude_type = variable_get('exclude_node_title_content_type_value_' . $type->type, 'none');
-    if ($exclude_type != 'user')
-        continue;
+    if ($exclude_type != 'user') {
+      continue;
+    }
 
     $extra['node'][$type->type]['form'] = array(
       'exclude_node_title' => array(
@@ -360,7 +357,7 @@ function exclude_node_title_field_extra_fields() {
       ),
     );
   }
-  
+
   return $extra;
 }
 
@@ -379,7 +376,7 @@ function exclude_node_title_ds_fields_info_alter(&$fields, $entity_type) {
   }
 }
 
-/*
+/**
  * Render the field obeying exclude node title settings.
  */
 function _exclude_node_title_ds_render_field($field) {

@@ -1,12 +1,17 @@
 <?php
 
 /**
+ * @file
+ * Exclude Node Title module install/schema hooks.
+ */
+
+/**
  * Implements hook_install().
  */
 function exclude_node_title_install() {
-  // attach default permission to use exclude node title
-  $res = db_query("SELECT rid FROM {role}");
-  foreach ($res as $role) {
+  // Insert in the database the permission to use exclude node title.
+  $role_ids = db_query("SELECT rid FROM {role}");
+  foreach ($role_ids as $role) {
     db_query("INSERT INTO {role_permission} (rid, permission, module)
         VALUES (:rid, 'use exclude node title', 'exclude_node_title')",
             array(':rid' => $role->rid));
@@ -25,7 +30,7 @@ function exclude_node_title_uninstall() {
   }
 }
 
-/*
+/**
  * Implements hook_update_N().
  */
 function exclude_node_title_update_7100() {
