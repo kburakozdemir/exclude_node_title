@@ -32,6 +32,28 @@ function exclude_node_title_admin_settings() {
     '#collapsed' => FALSE,
   );
 
+  $form['exclude_node_title_hide_using_css'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide node title using CSS'),
+    '#description' => t('Select if you wish to use CSS to hide the node title. This will make your page accessible for both screen-readers and search engines as they utilize heading tags. You will need to place this variable "$exclude_node_title_class" in the page title class attribute, in both your page.tpl.php and node.tpl.php template for this feature to take effect.'),
+    '#default_value' => variable_get('exclude_node_title_hide_using_css', 0),
+    '#weight' => -2,
+  );
+
+  $form['exclude_node_title_themes_supporting_css'] = array(
+    '#type' => 'select',
+    '#options' => drupal_map_assoc(array_keys(list_themes())),
+    '#description' => t('Select the themes in which the page.tpl.php and node.tpl.php templates contain the variable "$exclude_node_title_class". You can find an example <a href="@link">here</a>.', array('@link' => 'https://www.drupal.org/node/1057044#comment-4080172')),
+    '#multiple' => TRUE,
+    '#default_value' => variable_get('exclude_node_title_themes_supporting_css', array()),
+    '#states' => array(
+      'visible' => array(
+        'input[name="exclude_node_title_hide_using_css"]' => array('checked' => TRUE),
+      ),
+    ),
+    '#weight' => -1,
+  );
+
   foreach (node_type_get_names() as $node_type => $node_type_label) {
     drupal_add_js(array('exclude_node_title' => array('content_types' => array($node_type => $node_type_label))), 'setting');
     $node_type_options = array(

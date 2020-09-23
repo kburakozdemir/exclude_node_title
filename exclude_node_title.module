@@ -107,7 +107,13 @@ function exclude_node_title_preprocess_node(&$vars) {
  */
 function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
   if (_exclude_node_title($node, $view_mode)) {
-    $vars['title'] = '';
+    $hide_using_css = variable_get('exclude_node_title_hide_using_css', 0);
+    if ($hide_using_css) {
+      $vars['exclude_node_title_class'] = drupal_html_class('element-hidden');
+    }
+    else {
+      $vars['title'] = '';
+    }
     if ($view_mode == 'nodeform') {
       // Prevent access to the title field on nodeform view mode.
       $vars['page']['content']['system_main']['title']['#access'] = FALSE;
@@ -120,7 +126,13 @@ function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
  */
 function exclude_node_title_preprocess_search_result(&$vars) {
   if (user_access('use exclude node title') && variable_get('exclude_node_title_search', 0)) {
-    $vars['title'] = '';
+    $hide_using_css = variable_get('exclude_node_title_hide_using_css', 0);
+    if ($hide_using_css) {
+      $vars['exclude_node_title_class'] = drupal_html_class('element-hidden');
+    }
+    else {
+      $vars['title'] = '';
+    }
   }
 }
 
@@ -179,6 +191,14 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
     // Prevent users without permission from accessing the node title settings.
     if (!exclude_node_title_check_perm($form['#node'])) {
       return FALSE;
+    }
+    // If the user chose to hide the title using CSS, add the form element only if the default theme supports the CSS method.
+    if (variable_get('exclude_node_title_hide_using_css', 0)) {
+      $theme_default = variable_get('theme_default', 'bartik');
+      $supported_themes = variable_get('exclude_node_title_themes_supporting_css', array());
+      if (!in_array($theme_default, $supported_themes)) {
+        return FALSE;
+      }
     }
     // Add form element only for enabled content types.
     if (variable_get('exclude_node_title_content_type_value_' . $form['#node']->type) == 'user') {
