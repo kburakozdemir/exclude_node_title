@@ -34,7 +34,7 @@ function exclude_node_title_menu() {
   $items = array();
   $items['admin/config/content/exclude_node_title'] = array(
     'title' => 'Exclude Node Title',
-    'description' => 'Exclude Node Title from display',
+    'description' => 'Configure which nodes and view modes can exclude the display of node title from display.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('exclude_node_title_admin_settings'),
     'access arguments' => array('administer exclude node title'),
@@ -52,7 +52,7 @@ function exclude_node_title_menu() {
  * @param string $view_mode
  *   The view mode, e.g. 'full' or 'teaser'.
  *
- * @return bool Returns TRUE if title should be hidden, otherwise returns FALSE.
+ * @return bool
  *   Returns TRUE if title should be hidden, otherwise returns FALSE.
  */
 function exclude_node_title($node, $view_mode) {
@@ -263,7 +263,7 @@ function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $i
  * @param string $view_mode
  *   The view mode, e.g. 'full' or 'teaser'.
  *
- * @return bool Returns TRUE if the title should be hidden, otherwise returns FALSE.
+ * @return bool
  *   Returns TRUE if the title should be hidden, otherwise returns FALSE.
  */
 function _exclude_node_title($param, $view_mode = 'full') {
@@ -327,7 +327,7 @@ function _exclude_node_title($param, $view_mode = 'full') {
  * @param int|object $param
  *   Can be a node object or integer value (nid).
  *
- * @return mixed Returns an array with node id and node type, or FALSE if there were errors.
+ * @return mixed
  *   Returns an array with node id and node type, or FALSE if there were errors.
  */
 function _exclude_node_title_get_node($param) {

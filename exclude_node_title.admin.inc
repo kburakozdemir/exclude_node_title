@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Exclude Node Title Administrative Interface.
@@ -79,15 +80,15 @@ function exclude_node_title_admin_settings() {
 
     switch ($form['exclude_node_title_content_type']['exclude_node_title_content_type_value_' . $node_type]['#default_value']) {
       case 'all':
-            $title = 'Exclude title from all nodes in the following view modes:';
+        $title = t('Exclude title from all nodes in the following view modes:');
         break;
 
       case 'user defined':
-            $title = 'Exclude title from user defined nodes in the following view modes:';
+        $title = t('Exclude title from user defined nodes in the following view modes:');
         break;
 
       default:
-            $title = 'Exclude from:';
+        $title = t('Exclude from:');
     }
 
     $form['exclude_node_title_content_type']['exclude_node_title_content_type_modes_' . $node_type] = array(
