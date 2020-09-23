@@ -22,7 +22,7 @@ function exclude_node_title_permission() {
       'title' => t('Exclude own node title'),
     ),
     'use exclude node title' => array(
-      'title' => t('Use exclude node title'),
+      'title' => t('View nodes without titles per Exclude Node Title settings'),
     ),
   );
 }
