@@ -28,7 +28,7 @@ Credits
 -------
 
 - Ported to Backdrop CMS by [K. Burak Özdemir](https://github.com/kburakozdemir).
-- Originally written for Drupal by [gabrielu](https://www.drupal.org/u/gabrielu).
+- Originally written for Drupal by [Gabriel Ungureanu](https://www.drupal.org/u/gabrielu).
 
 License
 -------
