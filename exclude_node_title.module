@@ -205,7 +205,8 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
     if (!exclude_node_title_check_perm($form['#node'])) {
       return FALSE;
     }
-    // If the user chose to hide the title using CSS, add the form element only if the default theme supports the CSS method.
+    // If the user chose to hide the title using CSS,
+    // add the form element only if the default theme supports the CSS method.
     if ($config->get('exclude_node_title_hide_using_css')) {
       $theme_default = config_get('system.performance', 'theme_default');
       $supported_themes = $config->get('exclude_node_title_themes_supporting_css');
@@ -220,7 +221,7 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
         '#type' => 'checkbox',
         '#title' => t('Exclude title from display'),
         '#required' => FALSE,
-        '#default_value' => (!empty($form['nid']['#value'])?in_array($form['nid']['#value'], $config->get('exclude_node_title_nid_list')) : FALSE),
+        '#default_value' => (!empty($form['nid']['#value']) ? in_array($form['nid']['#value'], $config->get('exclude_node_title_nid_list')) : FALSE),
         '#weight' => $weight,
       );
       if (module_exists('translation') && $config->get('exclude_node_title_translation_sync') == TRUE && translation_supported_type($form['#node']->type) && !empty($form['nid']['#value'])) {
