@@ -1,4 +1,5 @@
 name = 	Exclude node title
 description = Allows exclusion of the title in preselected content type. Works with teaser and other view modes.
-core = 7.x
+backdrop = 1.x
+type = module
 configure = admin/config/content/exclude_node_title

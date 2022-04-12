@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Primarily Drupal hooks and global API functions to exclude node titles.
+ * Primarily Backdrop hooks and global API functions to exclude node titles.
  *
  * This is the main module file for Exclude Node Title.
  */
@@ -35,7 +35,7 @@ function exclude_node_title_menu() {
   $items['admin/config/content/exclude_node_title'] = array(
     'title' => 'Exclude Node Title',
     'description' => 'Configure which nodes and view modes can exclude the display of node title from display.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('exclude_node_title_admin_settings'),
     'access arguments' => array('administer exclude node title'),
     'type' => MENU_NORMAL_ITEM,
@@ -103,13 +103,24 @@ function exclude_node_title_preprocess_node(&$vars) {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function exclude_node_title_config_info() {
+  $prefixes['exclude_node_title.settings'] = array(
+    'label' => t('Exclude node title settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Remove the title from the variables array.
  */
 function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
   if (_exclude_node_title($node, $view_mode)) {
-    $hide_using_css = variable_get('exclude_node_title_hide_using_css', 0);
+    $hide_using_css = config_get('exclude_node_title.settings', 'exclude_node_title_hide_using_css');
     if ($hide_using_css) {
-      $vars['exclude_node_title_class'] = drupal_html_class('element-hidden');
+      $vars['exclude_node_title_class'] = backdrop_html_class('element-hidden');
     }
     else {
       $vars['title'] = '';
@@ -125,10 +136,11 @@ function _exclude_node_title_preprocess(&$vars, $node, $view_mode) {
  * Implements hook_preprocess_search_result().
  */
 function exclude_node_title_preprocess_search_result(&$vars) {
-  if (user_access('use exclude node title') && variable_get('exclude_node_title_search', 0)) {
-    $hide_using_css = variable_get('exclude_node_title_hide_using_css', 0);
+  $config = config('exclude_node_title.settings');
+  if (user_access('use exclude node title') && $config->get('exclude_node_title_search')) {
+    $hide_using_css = $config->get('exclude_node_title_hide_using_css');
     if ($hide_using_css) {
-      $vars['exclude_node_title_class'] = drupal_html_class('element-hidden');
+      $vars['exclude_node_title_class'] = backdrop_html_class('element-hidden');
     }
     else {
       $vars['title'] = '';
@@ -181,11 +193,12 @@ function exclude_node_title_check_perm($node) {
  * Implements hook_form_alter().
  */
 function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
+  $config = config('exclude_node_title.settings');
   if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id) {
     // Exclude the node title for privileged users.
     if (user_access('use exclude node title')) {
       if (_exclude_node_title($form['#node'], 'nodeform')) {
-        drupal_set_title('');
+        backdrop_set_title('');
       }
     }
     // Prevent users without permission from accessing the node title settings.
@@ -193,24 +206,24 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
       return FALSE;
     }
     // If the user chose to hide the title using CSS, add the form element only if the default theme supports the CSS method.
-    if (variable_get('exclude_node_title_hide_using_css', 0)) {
-      $theme_default = variable_get('theme_default', 'bartik');
-      $supported_themes = variable_get('exclude_node_title_themes_supporting_css', array());
+    if ($config->get('exclude_node_title_hide_using_css')) {
+      $theme_default = config_get('system.performance', 'theme_default');
+      $supported_themes = $config->get('exclude_node_title_themes_supporting_css');
       if (!in_array($theme_default, $supported_themes)) {
         return FALSE;
       }
     }
     // Add form element only for enabled content types.
-    if (variable_get('exclude_node_title_content_type_value_' . $form['#node']->type) == 'user') {
+    if ($config->get('exclude_node_title_content_type_value_' . $form['#node']->type) == 'user') {
       $weight = $form['title']['#weight'] + 0.1;
       $form['exclude_node_title'] = array(
         '#type' => 'checkbox',
         '#title' => t('Exclude title from display'),
         '#required' => FALSE,
-        '#default_value' => (!empty($form['nid']['#value']) ? in_array($form['nid']['#value'], variable_get('exclude_node_title_nid_list', array())) : FALSE),
+        '#default_value' => (!empty($form['nid']['#value'])?in_array($form['nid']['#value'], $config->get('exclude_node_title_nid_list')) : FALSE),
         '#weight' => $weight,
       );
-      if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($form['#node']->type) && !empty($form['nid']['#value'])) {
+      if (module_exists('translation') && $config->get('exclude_node_title_translation_sync') == TRUE && translation_supported_type($form['#node']->type) && !empty($form['nid']['#value'])) {
         // Get the translation source node ID.
         $tnid = db_select('node', 'n')
           ->fields('n', array('tnid'))
@@ -230,16 +243,16 @@ function exclude_node_title_form_alter(&$form, &$form_state, $form_id) {
  * Set exclude_node_title flag for the given node.
  */
 function exclude_node_title_set_flag($node, $value = 1) {
-  $exclude_list = variable_get('exclude_node_title_nid_list', array());
+  $exclude_list = config_get('exclude_node_title.settings', 'exclude_node_title_nid_list');
   $is_excluded = array_search($node->nid, $exclude_list);
   if ($value == 1 && $is_excluded === FALSE) {
     $exclude_list[] = $node->nid;
-    variable_set('exclude_node_title_nid_list', $exclude_list);
+    config_set('exclude_node_title.settings', 'exclude_node_title_nid_list', $exclude_list);
     return;
   }
   if ($value == 0 && $is_excluded !== FALSE) {
     unset($exclude_list[$is_excluded]);
-    variable_set('exclude_node_title_nid_list', $exclude_list);
+    config_set('exclude_node_title.settings', 'exclude_node_title_nid_list', $exclude_list);
     return;
   }
 }
@@ -250,8 +263,8 @@ function exclude_node_title_set_flag($node, $value = 1) {
 function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $instances) {
   // Remove variables when a content type is deleted.
   if ($entity_type == 'node') {
-    variable_del('exclude_node_title_content_type_value_' . $bundle);
-    variable_del('exclude_node_title_content_type_modes_' . $bundle);
+    config_clear('exclude_node_title.settings', 'exclude_node_title_content_type_value_' . $bundle);
+    config_clear('exclude_node_title.settings', 'exclude_node_title_content_type_modes_' . $bundle);
   }
 }
 
@@ -267,6 +280,7 @@ function exclude_node_title_field_attach_delete_bundle($entity_type, $bundle, $i
  *   Returns TRUE if the title should be hidden, otherwise returns FALSE.
  */
 function _exclude_node_title($param, $view_mode = 'full') {
+  $config = config('exclude_node_title.settings');
   if (!($node_info = _exclude_node_title_get_node($param))) {
     return FALSE;
   }
@@ -275,8 +289,8 @@ function _exclude_node_title($param, $view_mode = 'full') {
   if (!isset($exclude_settings)) {
     foreach (_node_types_build()->names as $key => $val) {
       $exclude_settings[$key] = array(
-        'type'  => variable_get('exclude_node_title_content_type_value_' . $key, 'none'),
-        'modes' => variable_get('exclude_node_title_content_type_modes_' . $key, array()),
+        'type' => $config->get('exclude_node_title_content_type_value_' . $key),
+        'modes' => $config->get('exclude_node_title_content_type_modes_' . $key),
       );
     }
   }
@@ -292,9 +306,9 @@ function _exclude_node_title($param, $view_mode = 'full') {
         return FALSE;
       }
       // Prepare a list of the node IDs to be excluded.
-      $nid_exclude_list = variable_get('exclude_node_title_nid_list', array());
+      $nid_exclude_list = $config->get('exclude_node_title_nid_list');
       $nid_list = array($node_info['nid'] => $node_info['nid']);
-      if (module_exists('translation') && variable_get('exclude_node_title_translation_sync', TRUE) == TRUE && translation_supported_type($node_info['node_type'])) {
+      if (module_exists('translation') && $config->get('exclude_node_title_translation_sync') == TRUE && translation_supported_type($node_info['node_type'])) {
         // Get the translation source node ID.
         $tnid = db_select('node', 'n')
           ->fields('n', array('tnid'))
@@ -363,7 +377,7 @@ function exclude_node_title_field_extra_fields() {
   $extra = array();
 
   foreach (node_type_get_types() as $type) {
-    $exclude_type = variable_get('exclude_node_title_content_type_value_' . $type->type, 'none');
+    $exclude_type = config_get('exclude_node_title.settings', 'exclude_node_title_content_type_value_' . $type->type);
     if ($exclude_type != 'user') {
       continue;
     }

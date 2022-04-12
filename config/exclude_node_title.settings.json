@@ -1,0 +1,15 @@
+{
+    "_config_name": "exclude_node_title.settings",
+    "exclude_node_title_search": "0",
+    "exclude_node_title_translation_sync": true,
+    "exclude_node_title_hide_using_css": "0",
+    "exclude_node_title_themes_supporting_css": [],
+    "exclude_node_title_content_type_value_node_type": "dynamic variable in file /exclude_node_title/exclude_node_title.admin.inc line 69",
+    "exclude_node_title_content_type_modes_node_type": "dynamic variable in file /exclude_node_title/exclude_node_title.admin.inc line 97",
+    "exclude_node_title_remove_title": false,
+    "exclude_node_title_content_type_value_key": "dynamic variable in file /exclude_node_title/exclude_node_title.module line 278",
+    "exclude_node_title_content_type_value_formnodetype": "dynamic variable in file /exclude_node_title/exclude_node_title.module line 204",
+    "exclude_node_title_nid_list": [],
+    "exclude_node_title_content_type_modes_key": "dynamic variable in file /exclude_node_title/exclude_node_title.module line 279",
+    "exclude_node_title_content_type_value_typetype": "dynamic variable in file /exclude_node_title/exclude_node_title.module line 366"
+}
