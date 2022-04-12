@@ -1,4 +1,4 @@
-Exlucde Node Title
+Exclude Node Title
 ===========================
 
 
