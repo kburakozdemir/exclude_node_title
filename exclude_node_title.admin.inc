@@ -107,7 +107,7 @@ function exclude_node_title_admin_settings() {
     );
   }
 
-  backdrop_add_js(backdrop_get_path('module', 'exclude_node_title') . '/exclude_node_title.js');
+  backdrop_add_js(backdrop_get_path('module', 'exclude_node_title') . '/js/exclude_node_title.js');
 
   return system_settings_form($form);
 }
