@@ -5,25 +5,13 @@
  * Exclude Node Title module install/schema hooks.
  */
 
-/**
- * Implements hook_install().
- */
-function exclude_node_title_install() {
-  // Insert in the database the permission to use exclude node title.
-  $role_ids = db_query("SELECT rid FROM {role}");
-  foreach ($role_ids as $role) {
-    db_query("INSERT INTO {role_permission} (rid, permission, module)
-        VALUES (:rid, 'use exclude node title', 'exclude_node_title')",
-            array(':rid' => $role->rid));
-  }
-  // Dynamically generated variable data was detected on the following lines.
-  // /exclude_node_title/exclude_node_title.admin.inc line 69
-  // /exclude_node_title/exclude_node_title.admin.inc line 97
-  // /exclude_node_title/exclude_node_title.module line 278
-  // /exclude_node_title/exclude_node_title.module line 204
-  // /exclude_node_title/exclude_node_title.module line 279
-  // /exclude_node_title/exclude_node_title.module line 366
-}
+// Dynamically generated variable data was detected on the following lines.
+// /exclude_node_title/exclude_node_title.admin.inc line 69.
+// /exclude_node_title/exclude_node_title.admin.inc line 97.
+// /exclude_node_title/exclude_node_title.module line 278.
+// /exclude_node_title/exclude_node_title.module line 204.
+// /exclude_node_title/exclude_node_title.module line 279.
+// /exclude_node_title/exclude_node_title.module line 366.
 
 /**
  * Implements hook_uninstall().
